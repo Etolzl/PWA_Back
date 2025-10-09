@@ -8,7 +8,7 @@ const authRoutes = require('./routes/authRoutes');
 const imageRoutes = require('./routes/imageRoutes');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4001;
 
 // Conectar a la base de datos
 conectarDB();
