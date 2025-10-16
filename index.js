@@ -6,6 +6,7 @@ const conectarDB = require('./config/database');
 // Importar rutas
 const authRoutes = require('./routes/authRoutes');
 const imageRoutes = require('./routes/imageRoutes');
+const pushRoutes = require('./routes/pushRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 4001;
@@ -25,7 +26,8 @@ app.get('/', (req, res) => {
     version: '1.0.0',
     endpoints: {
       auth: '/api/auth',
-      images: '/api/images'
+      images: '/api/images',
+      push: '/api/push'
     }
   });
 });
@@ -35,6 +37,9 @@ app.use('/api/auth', authRoutes);
 
 // Rutas de imágenes
 app.use('/api/images', imageRoutes);
+
+// Rutas de notificaciones push
+app.use('/api/push', pushRoutes);
 
 // Middleware para manejar rutas no encontradas
 app.use((req, res) => {

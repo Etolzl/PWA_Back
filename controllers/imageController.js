@@ -1,6 +1,7 @@
 const Image = require('../models/Image');
 const User = require('../models/User');
 const mongoose = require('mongoose');
+const { enviarPushAUsuarioInterno } = require('./pushController');
 
 // Guardar una imagen en el perfil del usuario
 const guardarImagen = async (req, res) => {
@@ -40,10 +41,28 @@ const guardarImagen = async (req, res) => {
       { new: true }
     );
 
+    // Intentar enviar notificación push si el usuario está suscrito
+    let notification = { sent: false };
+    try {
+      const titulo = 'Imagen guardada';
+      const mensaje = title ? `Has guardado: ${title}` : 'Has guardado una nueva imagen';
+      notification = await enviarPushAUsuarioInterno({
+        userId,
+        titulo,
+        mensaje,
+        url: '/dashboard',
+        icono: '/icon.svg'
+      });
+    } catch (e) {
+      // No interrumpir el flujo por errores de push
+    }
+
     res.status(201).json({
       success: true,
-      message: 'Imagen guardada exitosamente',
-      data: imagenGuardada
+      message: notification.sent ? 'Imagen guardada y notificación enviada' : 'Imagen guardada exitosamente',
+      data: imagenGuardada,
+      notificationSent: !!notification.sent,
+      notification: notification
     });
 
   } catch (error) {
@@ -130,6 +149,24 @@ const eliminarImagenGuardada = async (req, res) => {
       { $pull: { imagenesGuardadas: imageId } },
       { new: true }
     );
+
+    // Enviar notificación push tras eliminación exitosa
+    try {
+      const deleteNotification = await enviarPushAUsuarioInterno({
+        userId,
+        titulo: 'Imagen eliminada',
+        mensaje: imagen.title 
+          ? `"${imagen.title}" ha sido eliminada de tu galería` 
+          : 'Una imagen ha sido eliminada de tu galería',
+        url: '/dashboard',
+        icono: '/icon.svg'
+      });
+      
+      console.log('Notificación de eliminación enviada:', deleteNotification);
+    } catch (error) {
+      console.error('Error enviando notificación de eliminación:', error);
+      // No fallar la eliminación por error en notificación
+    }
 
     res.json({
       success: true,
