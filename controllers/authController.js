@@ -39,6 +39,7 @@ const registrarUsuario = async (req, res) => {
         id: usuarioGuardado._id,
         nombre: usuarioGuardado.nombre,
         correo: usuarioGuardado.correo,
+        rol: usuarioGuardado.rol,
         createdAt: usuarioGuardado.createdAt
       }
     });
@@ -110,6 +111,7 @@ const iniciarSesion = async (req, res) => {
         id: usuario._id,
         nombre: usuario.nombre,
         correo: usuario.correo,
+        rol: usuario.rol,
         createdAt: usuario.createdAt
       }
     });
@@ -142,6 +144,7 @@ const obtenerPerfil = async (req, res) => {
         id: usuario._id,
         nombre: usuario.nombre,
         correo: usuario.correo,
+        rol: usuario.rol,
         createdAt: usuario.createdAt,
         updatedAt: usuario.updatedAt
       }
@@ -156,8 +159,46 @@ const obtenerPerfil = async (req, res) => {
   }
 };
 
+// Obtener lista de usuarios (solo para administradores)
+const obtenerUsuarios = async (req, res) => {
+  try {
+    // Obtener todos los usuarios con rol 'usuario'
+    const usuarios = await User.find({ rol: 'usuario' })
+      .select('nombre correo rol createdAt updatedAt pushSubscriptions')
+      .sort({ createdAt: -1 });
+
+    // Formatear datos para incluir información de suscripción
+    const usuariosFormateados = usuarios.map(usuario => ({
+      id: usuario._id,
+      nombre: usuario.nombre,
+      correo: usuario.correo,
+      rol: usuario.rol,
+      createdAt: usuario.createdAt,
+      updatedAt: usuario.updatedAt,
+      tieneSuscripcionPush: usuario.pushSubscriptions && usuario.pushSubscriptions.length > 0,
+      cantidadSuscripciones: usuario.pushSubscriptions ? usuario.pushSubscriptions.length : 0
+    }));
+
+    res.status(200).json({
+      success: true,
+      data: {
+        usuarios: usuariosFormateados,
+        total: usuariosFormateados.length
+      }
+    });
+
+  } catch (error) {
+    console.error('Error al obtener usuarios:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor'
+    });
+  }
+};
+
 module.exports = {
   registrarUsuario,
   iniciarSesion,
-  obtenerPerfil
+  obtenerPerfil,
+  obtenerUsuarios
 };

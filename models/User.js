@@ -22,6 +22,11 @@ const userSchema = new mongoose.Schema({
     required: [true, 'La contraseña es obligatoria'],
     minlength: [6, 'La contraseña debe tener al menos 6 caracteres']
   },
+  rol: {
+    type: String,
+    enum: ['usuario', 'admin'],
+    default: 'usuario'
+  },
   imagenesGuardadas: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Image'
